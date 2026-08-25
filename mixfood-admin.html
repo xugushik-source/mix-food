@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>MIX FOOD — Панель владельца</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--black:#141414;--black2:#1f1f1f;--yellow:#FFC700;--yellow-dark:#E0A800;--red:#E63946;--red-dark:#C1121F;--ink:#1a1a1a;--mu:#7a7a7a;--border:#eee;}
+body{font-family:'Nunito',sans-serif;background:#f5f5f5;color:var(--ink);min-height:100vh;}
+#pinGate{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;background:linear-gradient(160deg,var(--black) 0%,#0a0a0a 100%);}
+#pinGate h1{font-family:'Fredoka',sans-serif;color:var(--yellow);font-size:26px;margin-bottom:6px;font-weight:800;}
+#pinGate p{color:rgba(255,255,255,0.55);font-size:12px;margin-bottom:20px;font-weight:700;}
+#pinInput{font-size:28px;letter-spacing:10px;text-align:center;width:180px;padding:12px;border-radius:12px;border:none;margin-bottom:14px;}
+#pinBtn{background:var(--yellow);color:var(--black);border:none;padding:13px 30px;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;}
+#pinErr{color:#ffb4b4;font-size:12px;margin-top:10px;display:none;}
+#app{display:none;max-width:720px;margin:0 auto;padding-bottom:60px;}
+.nav{background:var(--black);padding:15px 16px;position:sticky;top:0;z-index:10;border-bottom:4px solid var(--yellow);}
+.nav h1{font-family:'Fredoka',sans-serif;color:var(--yellow);font-size:19px;font-weight:800;}
+.nav span{color:rgba(255,255,255,0.5);font-size:11px;font-weight:700;}
+.tabs{display:flex;gap:8px;padding:12px 16px;background:#fff;border-bottom:1px solid var(--border);}
+.tab{flex:1;background:#f5f5f5;border:2px solid transparent;color:var(--mu);padding:10px;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;}
+.tab.active{background:var(--black);color:var(--yellow);}
+.wrap{padding:14px 16px;}
+.card{background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+.range-btns{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.range-btn{background:#f5f5f5;border:2px solid transparent;color:var(--ink);padding:9px 15px;border-radius:20px;font-size:12.5px;font-weight:800;cursor:pointer;}
+.range-btn.active{background:var(--yellow);}
+.custom-range{display:flex;gap:8px;align-items:center;margin-bottom:14px;font-size:12px;}
+.custom-range input{padding:9px;border:2px solid var(--border);border-radius:8px;font-size:13px;}
+.stats-row{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.stat-box{flex:1;min-width:90px;background:#f5f5f5;border-radius:12px;padding:13px;text-align:center;}
+.stat-box b{display:block;font-family:'Fredoka',sans-serif;font-size:22px;color:var(--ink);font-weight:700;}
+.stat-box span{font-size:10.5px;color:var(--mu);font-weight:700;}
+.stat-box.hot{background:#FFFBEB;}
+.stat-box.hot b{color:var(--red-dark);}
+.dish-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:14px;font-weight:700;}
+.dish-row:last-child{border-bottom:none;}
+.dish-qty{background:var(--black);color:var(--yellow);border-radius:10px;padding:2px 10px;font-weight:800;font-size:12px;}
+.order-card{border:2px solid var(--border);border-radius:14px;padding:13px;margin-bottom:10px;}
+.order-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.order-name{font-weight:800;font-size:14.5px;}
+.order-status{font-size:11px;font-weight:800;padding:3px 9px;border-radius:10px;}
+.st-новый{background:#E8F5E9;color:#27AE60;}
+.st-отменён{background:#FBEAE6;color:var(--red-dark);text-decoration:line-through;}
+.st-перенесён{background:#FFF3E0;color:#E65100;}
+.order-meta{font-size:12px;color:var(--mu);margin-bottom:6px;font-weight:700;}
+.order-items{font-size:12.5px;margin-bottom:8px;line-height:1.5;font-weight:700;}
+.order-btns{display:flex;gap:8px;}
+.order-btns button{flex:1;padding:9px;border-radius:9px;font-size:12px;font-weight:800;border:none;cursor:pointer;}
+.btn-cancel{background:var(--red);color:#fff;}
+.btn-reschedule{background:var(--yellow-dark);color:#fff;}
+.btn-disabled{background:var(--border);color:var(--mu);cursor:not-allowed;}
+.loading, .empty{text-align:center;padding:30px;color:var(--mu);font-weight:700;}
+.conv-note{font-size:12px;color:var(--mu);text-align:center;margin-top:6px;font-weight:700;}
+</style>
+</head>
+<body>
+
+<div id="pinGate">
+  <h1>MIX FOOD</h1>
+  <p>Панель владельца — введите PIN</p>
+  <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
+  <button id="pinBtn" onclick="checkPin()">Войти</button>
+  <div id="pinErr">Неверный PIN</div>
+</div>
+
+<div id="app">
+  <div class="nav"><h1>MIX FOOD <span>· панель владельца</span></h1></div>
+  <div class="tabs">
+    <button class="tab active" id="tabReportBtn" onclick="switchTab('report')">📊 Отчёты</button>
+    <button class="tab" id="tabOrdersBtn" onclick="switchTab('orders')">📋 Заказы</button>
+  </div>
+  <div class="wrap">
+    <div id="tabReport">
+      <div class="card">
+        <div class="range-btns">
+          <button class="range-btn active" data-range="daily" onclick="loadReport('daily')">Сегодня</button>
+          <button class="range-btn" data-range="weekly" onclick="loadReport('weekly')">Неделя</button>
+          <button class="range-btn" data-range="custom" onclick="showCustomRange()">Свой период</button>
+        </div>
+        <div class="custom-range" id="customRangeBox" style="display:none">
+          <input type="date" id="fromDate"> — <input type="date" id="toDate">
+          <button class="range-btn" onclick="loadReport('custom')">Показать</button>
+        </div>
+        <div id="reportBody"><div class="loading">Загрузка...</div></div>
+      </div>
+    </div>
+    <div id="tabOrders" style="display:none">
+      <div class="card"><div id="ordersBody"><div class="loading">Загрузка...</div></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbwsh5fwWYOEnGVdRAkuMqvfyC77lH5r7YizlMHCHZsHo8zCz6SyN8X2vFpQqTVq1eiCMw/exec';
+var PIN = '';
+
+function checkPin() {
+  var val = document.getElementById('pinInput').value.trim();
+  if (val.length !== 4) return;
+  PIN = val;
+  fetch(GAS_URL + '?action=list&pin=' + encodeURIComponent(PIN))
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if (data.ok) {
+        document.getElementById('pinGate').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        loadReport('daily');
+      } else { document.getElementById('pinErr').style.display = 'block'; }
+    })
+    .catch(function(){
+      document.getElementById('pinErr').textContent = 'Ошибка связи с сервером — проверьте GAS_URL';
+      document.getElementById('pinErr').style.display = 'block';
+    });
+}
+function switchTab(tab) {
+  document.getElementById('tabReport').style.display = tab === 'report' ? 'block' : 'none';
+  document.getElementById('tabOrders').style.display = tab === 'orders' ? 'block' : 'none';
+  document.getElementById('tabReportBtn').classList.toggle('active', tab === 'report');
+  document.getElementById('tabOrdersBtn').classList.toggle('active', tab === 'orders');
+  if (tab === 'orders') loadOrders();
+}
+function showCustomRange() {
+  document.querySelectorAll('.range-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.querySelector('[data-range="custom"]').classList.add('active');
+  document.getElementById('customRangeBox').style.display = 'flex';
+}
+function loadReport(range) {
+  if (range !== 'custom') {
+    document.getElementById('customRangeBox').style.display = 'none';
+    document.querySelectorAll('.range-btn').forEach(function(b){ b.classList.remove('active'); });
+    document.querySelector('[data-range="' + range + '"]').classList.add('active');
+  }
+  var url = GAS_URL + '?action=report&pin=' + encodeURIComponent(PIN) + '&range=' + range;
+  if (range === 'custom') {
+    var from = document.getElementById('fromDate').value, to = document.getElementById('toDate').value;
+    if (!from || !to) return;
+    url += '&from=' + from + '&to=' + to;
+  }
+  document.getElementById('reportBody').innerHTML = '<div class="loading">Загрузка...</div>';
+  fetch(url).then(function(r){ return r.json(); }).then(function(data){
+    if (!data.ok) { document.getElementById('reportBody').innerHTML = '<div class="empty">Ошибка: ' + (data.error||'') + '</div>'; return; }
+    var totalVisits = data.visitsSite + data.visitsTable;
+    var html = '<div class="stats-row">';
+    html += '<div class="stat-box"><b>' + totalVisits + '</b><span>заходов на меню</span></div>';
+    html += '<div class="stat-box"><b>' + data.visitsTable + '</b><span>заходов со стола</span></div>';
+    html += '<div class="stat-box hot"><b>' + data.ordersCount + '</b><span>заказов</span></div>';
+    html += '<div class="stat-box"><b>' + data.totalRevenue + ' ₾</b><span>выручка</span></div>';
+    html += '</div>';
+    html += '<div class="conv-note">Конверсия захода в заказ: <b>' + data.conversionPct + '%</b></div>';
+    if (data.dishes.length === 0) {
+      html += '<div class="empty" style="margin-top:14px">За этот период заказов нет</div>';
+    } else {
+      html += '<div style="margin-top:16px">';
+      data.dishes.forEach(function(d){
+        html += '<div class="dish-row"><span>' + d.name + '</span><span class="dish-qty">' + d.qty + ' шт.</span></div>';
+      });
+      html += '</div>';
+    }
+    document.getElementById('reportBody').innerHTML = html;
+  }).catch(function(){ document.getElementById('reportBody').innerHTML = '<div class="empty">Не удалось связаться с сервером</div>'; });
+}
+function loadOrders() {
+  document.getElementById('ordersBody').innerHTML = '<div class="loading">Загрузка...</div>';
+  fetch(GAS_URL + '?action=list&pin=' + encodeURIComponent(PIN)).then(function(r){ return r.json(); }).then(function(data){
+    if (!data.ok || data.orders.length === 0) { document.getElementById('ordersBody').innerHTML = '<div class="empty">Заказов пока нет</div>'; return; }
+    var html = '';
+    data.orders.forEach(function(o){
+      var status = o['Статус'] || 'новый';
+      var isFinal = status === 'отменён';
+      html += '<div class="order-card">';
+      html += '  <div class="order-top"><div class="order-name">' + o['Имя'] + '</div><div class="order-status st-' + status + '">' + status + '</div></div>';
+      html += '  <div class="order-meta">' + o['Дата'] + ' ' + o['Время создания'] + ' · ' + o['Время самовывоза'] + ' · ' + o['Телефон'] + '</div>';
+      html += '  <div class="order-items">' + o['Блюда'] + '</div>';
+      html += '  <div class="order-meta">Итого: <b>' + o['Сумма'] + ' ₾</b>' + (o['Подарок'] ? ' · 🎁 ' + o['Подарок'] : '') + '</div>';
+      html += '  <div class="order-btns">';
+      html += isFinal
+        ? '<button class="btn-disabled" disabled>Уже отменён</button>'
+        : '<button class="btn-cancel" onclick="cancelOrder(\'' + o['OrderID'] + '\')">Отменить</button>' +
+          '<button class="btn-reschedule" onclick="rescheduleOrder(\'' + o['OrderID'] + '\')">Перенести</button>';
+      html += '  </div></div>';
+    });
+    document.getElementById('ordersBody').innerHTML = html;
+  }).catch(function(){ document.getElementById('ordersBody').innerHTML = '<div class="empty">Не удалось связаться с сервером</div>'; });
+}
+function cancelOrder(id) {
+  if (!confirm('Отменить этот заказ?')) return;
+  fetch(GAS_URL + '?action=updateStatus&pin=' + encodeURIComponent(PIN) + '&id=' + encodeURIComponent(id) + '&status=' + encodeURIComponent('отменён'))
+    .then(function(r){ return r.json(); }).then(function(){ loadOrders(); });
+}
+function rescheduleOrder(id) {
+  var newTime = prompt('Новое время (например 14:30):');
+  if (!newTime) return;
+  fetch(GAS_URL + '?action=updateStatus&pin=' + encodeURIComponent(PIN) + '&id=' + encodeURIComponent(id) + '&status=' + encodeURIComponent('перенесён') + '&newTime=' + encodeURIComponent(newTime))
+    .then(function(r){ return r.json(); }).then(function(){ loadOrders(); });
+}
+</script>
+</body>
+</html>
