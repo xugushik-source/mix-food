@@ -111,8 +111,8 @@ function checkPin() {
         loadReport('daily');
       } else { document.getElementById('pinErr').style.display = 'block'; }
     })
-    .catch(function(){
-      document.getElementById('pinErr').textContent = 'Ошибка связи с сервером — проверьте GAS_URL';
+    .catch(function(err){
+      document.getElementById('pinErr').textContent = 'Ошибка: ' + (err && err.message ? err.message : String(err));
       document.getElementById('pinErr').style.display = 'block';
     });
 }
