@@ -574,7 +574,7 @@ var GAS_URL = 'https://script.google.com/macros/s/AKfycbwsh5fwWYOEnGVdRAkuMqvfyC
 if (!sessionStorage.getItem('mf_visited')) {
   sessionStorage.setItem('mf_visited', '1');
   if (GAS_URL && GAS_URL.indexOf('REPLACE') === -1) {
-    fetch(GAS_URL, {method:'POST', body: JSON.stringify({visitPing:true, page:'site'})}).catch(function(){});
+    fetch(GAS_URL, {method:'POST', mode:'no-cors', body: JSON.stringify({visitPing:true, page:'site'})}).catch(function(){});
   }
 }
 
@@ -818,7 +818,7 @@ function sendOrder() {
     var orderPayload = { name:name, phone:phone, pickupTime:fmtTime(pickupDate),
       items: keys.map(function(k){ return {name:cart[k].name, price:cart[k].price, qty:cart[k].qty}; }),
       total: total, gifts: gifts.map(function(t){return t.gift;}).join(', ') };
-    fetch(GAS_URL, {method:'POST', body: JSON.stringify(orderPayload)}).catch(function(){});
+    fetch(GAS_URL, {method:'POST', mode:'no-cors', body: JSON.stringify(orderPayload)}).catch(function(){});
   }
   window.open('https://wa.me/995568999953?text=' + encodeURIComponent(msg), '_blank');
 }
