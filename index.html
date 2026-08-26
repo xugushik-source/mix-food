@@ -685,7 +685,7 @@ footer strong{color:#fff;}
         <div class="pay-opt-lbl">BOG онлайн</div>
       </div>
     </div>
-    <div class="bog-note" id="bogNote">После отправки заказа ниже появится кнопка — нажмите её, чтобы перейти к оплате BOG (сумму впишите там вручную).</div>
+    <div class="bog-note" id="bogNote">Сначала оплатите по кнопке ниже (впишите сумму заказа вручную на странице BOG), затем нажмите «Я оплатил» — только тогда заказ уйдёт в WhatsApp.</div>
   </div>
 </div>
 
@@ -698,8 +698,9 @@ footer strong{color:#fff;}
     <div class="total-final-lbl">К оплате:</div>
     <div class="total-final-sum"><span id="totalNum">0</span> ₾</div>
   </div>
-  <button class="btn-wa" onclick="sendOrder()">Отправить заказ в WhatsApp</button>
-  <a href="#" id="bogPayBtn" target="_blank" rel="noopener" style="display:none; margin-top:10px; background:#0a5c36; color:#fff; text-align:center; padding:14px; border-radius:12px; font-weight:800; text-decoration:none; font-size:14px;">🏦 Оплатить онлайн (BOG) →</a>
+  <button class="btn-wa" id="sendBtnNormal" onclick="sendOrder()">Отправить заказ в WhatsApp</button>
+  <a href="#" id="bogPayBtn" target="_blank" rel="noopener" onclick="bogLinkClicked=true; document.getElementById('bogConfirmBtn').disabled=false;" style="display:none; background:#0a5c36; color:#fff; text-align:center; padding:14px; border-radius:12px; font-weight:800; text-decoration:none; font-size:14px;">🏦 Оплатить через BOG →</a>
+  <button class="btn-wa" id="bogConfirmBtn" onclick="sendOrder()" disabled style="display:none; margin-top:10px; background:#888;">✅ Я оплатил — отправить заказ</button>
 </div>
 
 </div>
@@ -966,12 +967,25 @@ function selectDelivery(method) {
   document.getElementById('addressGroup').style.display = method === 'delivery' ? 'block' : 'none';
   document.getElementById('pickupTimeLabel').textContent = method === 'delivery' ? 'Когда доставить?' : 'Когда заберёте?';
 }
+var bogLinkClicked = false;
 function selectPay(method) {
   payMethod = method;
   document.getElementById('pay-cash').classList.toggle('sel', method === 'cash');
   document.getElementById('pay-card').classList.toggle('sel', method === 'card');
   document.getElementById('pay-bog').classList.toggle('sel', method === 'bog');
   document.getElementById('bogNote').style.display = method === 'bog' ? 'block' : 'none';
+
+  var isBog = method === 'bog';
+  document.getElementById('sendBtnNormal').style.display = isBog ? 'none' : 'block';
+  document.getElementById('bogPayBtn').style.display = isBog ? 'block' : 'none';
+  document.getElementById('bogConfirmBtn').style.display = isBog ? 'block' : 'none';
+  if (isBog) {
+    var bogBtn = document.getElementById('bogPayBtn');
+    bogBtn.href = BOG_LINK;
+    // сброс при каждом переключении на BOG — заново требуем нажать "оплатить" перед подтверждением
+    bogLinkClicked = false;
+    document.getElementById('bogConfirmBtn').disabled = true;
+  }
 }
 function sendOrder() {
   var name = document.getElementById('fName').value.trim();
@@ -979,6 +993,12 @@ function sendOrder() {
   var comment = document.getElementById('fComment').value.trim();
   var err = document.getElementById('errMsg');
   if (!name || !phone) { err.style.display = 'block'; document.getElementById('fName').scrollIntoView({behavior:'smooth'}); return; }
+  if (payMethod === 'bog' && !bogLinkClicked) {
+    err.textContent = '⚠️ Сначала оплатите через BOG, потом нажмите "Я оплатил"';
+    err.style.display = 'block';
+    document.getElementById('bogPayBtn').scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
   var address = document.getElementById('fAddress').value.trim();
   if (deliveryMethod === 'delivery' && !address) {
     err.textContent = '⚠️ Укажите адрес доставки';
@@ -1006,7 +1026,7 @@ function sendOrder() {
     ? ('🛵 Доставка на адрес: ' + address + '\n🕐 Доставить к: ' + fmtTime(pickupDate) + '\n')
     : ('🚗 Самовывоз\n🕐 Заберут в: ' + fmtTime(pickupDate) + '\n');
   if (comment) msg += '💬 ' + comment + '\n';
-  var payLabel = payMethod === 'cash' ? 'Наличные' : (payMethod === 'card' ? 'Перевод' : 'Онлайн через BOG');
+  var payLabel = payMethod === 'cash' ? 'Наличные' : (payMethod === 'card' ? 'Перевод' : '✅ Оплачено онлайн (BOG)');
   msg += '💳 Оплата: ' + payLabel + '\n\n*Заказ:*\n';
   keys.forEach(function(k) {
     msg += '• ' + cart[k].name + (cart[k].qty > 1 ? ' x' + cart[k].qty : '') + ' — ' + (cart[k].price * cart[k].qty) + ' ₾\n';
@@ -1022,12 +1042,6 @@ function sendOrder() {
     fetch(GAS_URL, {method:'POST', mode:'no-cors', body: JSON.stringify(orderPayload)}).catch(function(){});
   }
   window.open('https://wa.me/995568999953?text=' + encodeURIComponent(msg), '_blank');
-  if (payMethod === 'bog') {
-    var bogBtn = document.getElementById('bogPayBtn');
-    bogBtn.href = BOG_LINK;
-    bogBtn.style.display = 'block';
-    bogBtn.scrollIntoView({behavior:'smooth', block:'center'});
-  }
 }
 
 renderPickupChips();
